@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>贪吃蛇游戏</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-size: 18px;
+      font-weight: 600;
+      background-color: #f0f0f0;
+    }
+
+    /* 游戏主容器 */
+    .game-container {
+      position: absolute;
+      margin: auto;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 900px;
+      height: 670px;
+      display: flex;
+      gap: 20px;
+    }
+
+    /* 游戏画布区域 */
+    #map {
+      width: 670px;
+      height: 670px;
+      border: 5px solid black;
+      position: relative;
+      background-color: #fff;
+      visibility: hidden;
+    }
+
+    #Snak_head {
+      width: 20px;
+      height: 20px;
+      background-color: red;
+      position: absolute;
+      box-shadow: 0 0 15px 1px black;
+      border-radius: 3px;
+    }
+
+    .food_span {
+      position: absolute;
+      display: block;
+      background-color: blue;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+
+    .Snak_body {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: black;
+      box-shadow: 0 0 15px 1px black;
+      border-radius: 3px;
+    }
+
+    /* 侧边信息面板 */
+    .info-panel {
+      width: 200px;
+      height: 670px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* 分数显示卡片 */
+    .score-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 20px;
+      color: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .score-card h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .score-value {
+      font-size: 36px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .high-score-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    /* 操作说明 */
+    .controls-info {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      flex: 1;
+    }
+
+    .controls-info h3 {
+      font-size: 16px;
+      margin-bottom: 15px;
+      color: #333;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 8px;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .key-badge {
+      display: inline-block;
+      background: #333;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-right: 10px;
+      min-width: 60px;
+      text-align: center;
+      font-family: monospace;
+    }
+
+    /* 开始游戏遮罩层 */
+    #Start_game {
+      position: absolute;
+      width: 100%;
+      height: 33%;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+      display: flex;
+      visibility: visible;
+      align-items: center;
+      justify-content: space-around;
+      border: 1px solid black;
+      font-size: 5.5rem;
+      background-color: black;
+      color: white;
+      z-index: 9999;
+    }
+
+    #Start_game span {
+      position: relative;
+    }
+
+    select {
+      appearance: none;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      width: 60px;
+      height: 30px;
+      margin-left: 18px;
+      outline: none;
+      padding-left: 15px;
+      border-radius: 5px;
+      background: white;
+      color: black;
+      font-weight: bold;
+    }
+
+    #Start_game span:after {
+      position: absolute;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: bottom;
+      animation: loading 2s -2s steps(3) infinite;
+      content: attr(data-text);
+    }
+
+    @keyframes loading {
+      0% {
+        width: 0rem;
+      }
+      33% {
+        width: 5rem;
+      }
+      100% {
+        width: 10rem;
+      }
+    }
+
+    /* 游戏信息栏 */
+    #diff, #score, #dir {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <!-- 游戏画布 -->
+    <div id="map">
+      <div id="Snak_head"></div>
+    </div>
+
+    <!-- 侧边信息面板 -->
+    <div class="info-panel">
+      <!-- 当前分数 -->
+      <div class="score-card">
+        <h3>当前分数</h3>
+        <div class="score-value" id="currentScore">0</div>
+      </div>
+
+      <!-- 历史最高分 -->
+      <div class="score-card high-score-card">
+        <h3>历史最高分</h3>
+        <div class="score-value" id="highScore">0</div>
+      </div>
+
+      <!-- 操作说明 -->
+      <div class="controls-info">
+        <h3>操作说明</h3>
+        <div class="control-item">
+          <span class="key-badge">↑↓←→</span>
+          <span>移动方向</span>
+        </div>
+        <div class="control-item">
+          <span class="key-badge">SPACE</span>
+          <span>暂停/继续</span>
+        </div>
+        <div class="control-item">
+          <span class="key-badge">SHIFT</span>
+          <span>加速移动</span>
+        </div>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #888; line-height: 1.6;">
+          <p>💡 提示：</p>
+          <p>• 不能直接反向移动</p>
+          <p>• 吃到食物速度+5%</p>
+          <p>• 按住Shift加速50%</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 开始/暂停遮罩 -->
+  <div id="Start_game">
+    <span data-text="...">开始游戏</span>
+    <span id="diff">
+      难度选择
+      <select>
+        <option value="300">简单</option>
+        <option value="200" selected>中等</option>
+        <option value="100">困难</option>
+      </select>
+    </span>
+    <span id="score">得分：<span>0</span></span>
+    <span id="dir">方向：<span>→</span></span>
+  </div>
+
+  <script src="贪吃蛇.js"></script>
+</body>
+</html>
